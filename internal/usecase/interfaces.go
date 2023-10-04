@@ -16,6 +16,11 @@ type (
 		History(context.Context) ([]entity.Translation, error)
 	}
 
+	// User
+	UserUseCase interface {
+		Users(ctx context.Context) ([]*entity.User, error)
+	}
+
 	// TranslationRepo -.
 	TranslationRepo interface {
 		Store(context.Context, entity.Translation) error
@@ -25,5 +30,10 @@ type (
 	// TranslationWebAPI -.
 	TranslationWebAPI interface {
 		Translate(entity.Translation) (entity.Translation, error)
+	}
+
+	//UserRepo
+	UserRepo interface {
+		GetUsers(ctx context.Context) ([]*entity.User, error)
 	}
 )
