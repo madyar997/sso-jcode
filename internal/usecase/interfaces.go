@@ -3,6 +3,7 @@ package usecase
 
 import (
 	"context"
+	"github.com/evrone/go-clean-template/internal/controller/http/v1/dto"
 
 	"github.com/evrone/go-clean-template/internal/entity"
 )
@@ -19,6 +20,10 @@ type (
 	// User
 	UserUseCase interface {
 		Users(ctx context.Context) ([]*entity.User, error)
+		CreateUser(ctx context.Context, user *entity.User) (int, error)
+
+		Register(ctx context.Context, email, password string) error
+		Login(ctx context.Context, email, password string) (*dto.LoginResponse, error)
 	}
 
 	// TranslationRepo -.
@@ -35,5 +40,8 @@ type (
 	//UserRepo
 	UserRepo interface {
 		GetUsers(ctx context.Context) ([]*entity.User, error)
+		CreateUser(ctx context.Context, user *entity.User) (int, error)
+
+		GetUserByEmail(ctx context.Context, email string) (*entity.User, error)
 	}
 )
