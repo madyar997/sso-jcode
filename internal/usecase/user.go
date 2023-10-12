@@ -88,3 +88,7 @@ func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginRes
 		Token: tokenString,
 	}, nil
 }
+
+func (u *User) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+	return u.repo.GetUserByEmail(ctx, email)
+}

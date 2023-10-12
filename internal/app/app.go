@@ -3,6 +3,8 @@ package app
 
 import (
 	"fmt"
+	"github.com/evrone/go-clean-template/internal/entity"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,7 +15,6 @@ import (
 	v1 "github.com/evrone/go-clean-template/internal/controller/http/v1"
 	"github.com/evrone/go-clean-template/internal/usecase"
 	"github.com/evrone/go-clean-template/internal/usecase/repo"
-	"github.com/evrone/go-clean-template/internal/usecase/webapi"
 	"github.com/evrone/go-clean-template/pkg/httpserver"
 	"github.com/evrone/go-clean-template/pkg/logger"
 	"github.com/evrone/go-clean-template/pkg/postgres"
@@ -24,23 +25,22 @@ func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 
 	// Repository
-	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.PoolMax))
+	pg, err := postgres.New(cfg.PG.URL)
 	if err != nil {
 		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
 	}
 	defer pg.Close()
 
-	// Use case
-	translationUseCase := usecase.New(
-		repo.New(pg),
-		webapi.New(),
-	)
+	err = pg.DB.AutoMigrate(entity.User{}, entity.Token{})
+	if err != nil {
+		log.Fatalf("could not auto migrate: %s", err.Error())
+	}
 
 	userUseCase := usecase.NewUser(repo.NewUserRepo(pg))
 
 	// HTTP Server
 	handler := gin.New()
-	v1.NewRouter(handler, l, translationUseCase, userUseCase)
+	v1.NewRouter(handler, l, userUseCase)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal
