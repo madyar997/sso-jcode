@@ -4,10 +4,12 @@ package app
 import (
 	"fmt"
 	"github.com/evrone/go-clean-template/internal/entity"
+	"github.com/evrone/go-clean-template/pkg/cache"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -36,11 +38,18 @@ func Run(cfg *config.Config) {
 		log.Fatalf("could not auto migrate: %s", err.Error())
 	}
 
+	redisClient, err := cache.NewRedisClient()
+	if err != nil {
+		return
+	}
+
+	userCache := cache.NewUserCache(redisClient, 10*time.Minute)
+
 	userUseCase := usecase.NewUser(repo.NewUserRepo(pg))
 
 	// HTTP Server
 	handler := gin.New()
-	v1.NewRouter(handler, l, userUseCase)
+	v1.NewRouter(handler, l, userUseCase, userCache)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal
