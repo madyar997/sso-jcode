@@ -4,18 +4,21 @@ import (
 	"github.com/evrone/go-clean-template/internal/controller/http/v1/dto"
 	"github.com/evrone/go-clean-template/internal/entity"
 	"github.com/evrone/go-clean-template/internal/usecase"
+	"github.com/evrone/go-clean-template/pkg/cache"
 	"github.com/evrone/go-clean-template/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
 type userRoutes struct {
-	u usecase.UserUseCase
-	l logger.Interface
+	u         usecase.UserUseCase
+	l         logger.Interface
+	userCache cache.User
 }
 
-func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Interface) {
-	r := &userRoutes{u, l}
+func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Interface, uc cache.User) {
+	r := &userRoutes{u, l, uc}
 
 	adminHandler := handler.Group("/admin/user")
 	{
@@ -104,12 +107,24 @@ func (ur *userRoutes) GetUserByEmail(ctx *gin.Context) {
 
 	email := ctx.Query("email")
 
-	user, err := ur.u.GetUserByEmail(ctx, email)
+	user, err := ur.userCache.Get(ctx, email)
 	if err != nil {
-		ur.l.Error(err, "http - v1 - user - all")
-		errorResponse(ctx, http.StatusInternalServerError, "database problems")
-
 		return
+	}
+
+	if user == nil {
+		user, err = ur.u.GetUserByEmail(ctx, email)
+		if err != nil {
+			ur.l.Error(err, "http - v1 - user - all")
+			errorResponse(ctx, http.StatusInternalServerError, "database problems")
+
+			return
+		}
+
+		err = ur.userCache.Set(ctx, email, user)
+		if err != nil {
+			log.Printf("could not cache user with email %s: %v", email, err)
+		}
 	}
 
 	ctx.JSON(http.StatusOK, user)

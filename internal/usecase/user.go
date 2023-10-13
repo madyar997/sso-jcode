@@ -90,5 +90,7 @@ func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginRes
 }
 
 func (u *User) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+	time.Sleep(2 * time.Second)
+
 	return u.repo.GetUserByEmail(ctx, email)
 }

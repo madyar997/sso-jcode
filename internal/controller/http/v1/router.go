@@ -2,6 +2,7 @@
 package v1
 
 import (
+	"github.com/evrone/go-clean-template/pkg/cache"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +23,7 @@ import (
 // @version     1.0
 // @host        localhost:8080
 // @BasePath    /v1
-func NewRouter(handler *gin.Engine, l logger.Interface, u usecase.UserUseCase) {
+func NewRouter(handler *gin.Engine, l logger.Interface, u usecase.UserUseCase, uc cache.User) {
 	// Options
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
@@ -40,6 +41,6 @@ func NewRouter(handler *gin.Engine, l logger.Interface, u usecase.UserUseCase) {
 	// Routers
 	h := handler.Group("/api/v1")
 	{
-		newUserRoutes(h, u, l)
+		newUserRoutes(h, u, l, uc)
 	}
 }
