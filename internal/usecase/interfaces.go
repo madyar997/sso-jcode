@@ -3,9 +3,9 @@ package usecase
 
 import (
 	"context"
-	"github.com/evrone/go-clean-template/internal/controller/http/v1/dto"
+	"github.com/madyar997/practice_7/internal/controller/http/v1/dto"
 
-	"github.com/evrone/go-clean-template/internal/entity"
+	"github.com/madyar997/practice_7/internal/entity"
 )
 
 //go:generate mockgen -source=interfaces.go -destination=./mocks_test.go -package=usecase_test

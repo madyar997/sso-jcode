@@ -4,9 +4,9 @@
 
 golang服务的整洁架构模板
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/evrone/go-clean-template)](https://goreportcard.com/report/github.com/evrone/go-clean-template)
-[![License](https://img.shields.io/github/license/evrone/go-clean-template.svg)](https://github.com/evrone/go-clean-template/blob/master/LICENSE)
-[![Release](https://img.shields.io/github/v/release/evrone/go-clean-template.svg)](https://github.com/evrone/go-clean-template/releases/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/madyar997/practice_7)](https://goreportcard.com/report/github.com/madyar997/practice_7)
+[![License](https://img.shields.io/github/license/evrone/go-clean-template.svg)](https://github.com/madyar997/practice_7/blob/master/LICENSE)
+[![Release](https://img.shields.io/github/v/release/evrone/go-clean-template.svg)](https://github.com/madyar997/practice_7/releases/)
 [![codecov](https://codecov.io/gh/evrone/go-clean-template/branch/master/graph/badge.svg?token=XE3E0X3EVQ)](https://codecov.io/gh/evrone/go-clean-template)
 
 ## 综述

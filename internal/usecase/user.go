@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/evrone/go-clean-template/internal/controller/http/v1/dto"
-	"github.com/evrone/go-clean-template/internal/entity"
 	"github.com/golang-jwt/jwt"
 	"github.com/jackc/pgx/v4"
+	"github.com/madyar997/practice_7/internal/controller/http/v1/dto"
+	"github.com/madyar997/practice_7/internal/entity"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )

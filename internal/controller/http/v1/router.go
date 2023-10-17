@@ -2,7 +2,7 @@
 package v1
 
 import (
-	"github.com/evrone/go-clean-template/pkg/cache"
+	"github.com/madyar997/practice_7/pkg/cache"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,9 +11,9 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	// Swagger docs.
-	_ "github.com/evrone/go-clean-template/docs"
-	"github.com/evrone/go-clean-template/internal/usecase"
-	"github.com/evrone/go-clean-template/pkg/logger"
+	_ "github.com/madyar997/practice_7/docs"
+	"github.com/madyar997/practice_7/internal/usecase"
+	"github.com/madyar997/practice_7/pkg/logger"
 )
 
 // NewRouter -.

@@ -1,12 +1,12 @@
 package v1
 
 import (
-	"github.com/evrone/go-clean-template/internal/controller/http/v1/dto"
-	"github.com/evrone/go-clean-template/internal/entity"
-	"github.com/evrone/go-clean-template/internal/usecase"
-	"github.com/evrone/go-clean-template/pkg/cache"
-	"github.com/evrone/go-clean-template/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/madyar997/practice_7/internal/controller/http/v1/dto"
+	"github.com/madyar997/practice_7/internal/entity"
+	"github.com/madyar997/practice_7/internal/usecase"
+	"github.com/madyar997/practice_7/pkg/cache"
+	"github.com/madyar997/practice_7/pkg/logger"
 	"log"
 	"net/http"
 )

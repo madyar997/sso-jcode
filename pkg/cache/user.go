@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"github.com/evrone/go-clean-template/internal/entity"
+	"github.com/madyar997/practice_7/internal/entity"
 	"github.com/redis/go-redis/v9"
 	"time"
 )

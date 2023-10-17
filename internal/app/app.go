@@ -3,8 +3,8 @@ package app
 
 import (
 	"fmt"
-	"github.com/evrone/go-clean-template/internal/entity"
-	"github.com/evrone/go-clean-template/pkg/cache"
+	"github.com/madyar997/practice_7/internal/entity"
+	"github.com/madyar997/practice_7/pkg/cache"
 	"log"
 	"os"
 	"os/signal"
@@ -13,13 +13,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/evrone/go-clean-template/config"
-	v1 "github.com/evrone/go-clean-template/internal/controller/http/v1"
-	"github.com/evrone/go-clean-template/internal/usecase"
-	"github.com/evrone/go-clean-template/internal/usecase/repo"
-	"github.com/evrone/go-clean-template/pkg/httpserver"
-	"github.com/evrone/go-clean-template/pkg/logger"
-	"github.com/evrone/go-clean-template/pkg/postgres"
+	"github.com/madyar997/practice_7/config"
+	v1 "github.com/madyar997/practice_7/internal/controller/http/v1"
+	"github.com/madyar997/practice_7/internal/usecase"
+	"github.com/madyar997/practice_7/internal/usecase/repo"
+	"github.com/madyar997/practice_7/pkg/httpserver"
+	"github.com/madyar997/practice_7/pkg/logger"
+	"github.com/madyar997/practice_7/pkg/postgres"
 )
 
 // Run creates objects via constructors.
