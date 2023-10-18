@@ -5,9 +5,13 @@ app:
 http:
   port: '8080'
 
-logger:
-  log_level: 'debug'
-  rollbar_env: 'go-clean-template'
+log:
+  level: 'debug'
 
-postgres:
-  pool_max: 2
+pg:
+  poolmax: 2
+  url : 'postgres://postgres:postgres@localhost:5432/postgres'
+
+auth:
+  login: 'madyar'
+  pass: 'mypass'

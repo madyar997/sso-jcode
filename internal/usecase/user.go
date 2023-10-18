@@ -64,18 +64,13 @@ func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginRes
 		return nil, errors.New(fmt.Sprintf("passwords do not match %v", err))
 	}
 
-	expiresAt := time.Now().Add(time.Hour * 1).Unix()
-
-	tk := &entity.Token{
-		Name:  user.Name,
-		Email: user.Email,
-		StandardClaims: &jwt.StandardClaims{
-			Audience:  user.Name,
-			ExpiresAt: expiresAt,
-		},
+	claims := jwt.MapClaims{
+		"email": user.Email,
+		"name":  user.Name,
+		"exp":   time.Now().Add(time.Hour * 1).Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk.StandardClaims)
+	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), claims)
 
 	tokenString, err := token.SignedString([]byte("practice_7"))
 	if err != nil {

@@ -2,6 +2,8 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/madyar997/practice_7/config"
+	"github.com/madyar997/practice_7/internal/controller/http/middleware"
 	"github.com/madyar997/practice_7/internal/controller/http/v1/dto"
 	"github.com/madyar997/practice_7/internal/entity"
 	"github.com/madyar997/practice_7/internal/usecase"
@@ -15,15 +17,15 @@ type userRoutes struct {
 	u         usecase.UserUseCase
 	l         logger.Interface
 	userCache cache.User
+	cfg       *config.Config
 }
 
-func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Interface, uc cache.User) {
-	r := &userRoutes{u, l, uc}
+func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Interface, uc cache.User, cfg *config.Config) {
+	r := &userRoutes{u, l, uc, cfg}
 
 	adminHandler := handler.Group("/admin/user")
 	{
-		//adminHandler.Use(middleware.CustomLogger())
-		//adminHandler.Use(middleware.JwtVerify())
+		adminHandler.Use(middleware.JwtVerify())
 		adminHandler.GET("/all", r.GetUsers)
 		adminHandler.POST("/", r.CreateUser)
 		adminHandler.GET("/", r.GetUserByEmail)

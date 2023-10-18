@@ -2,6 +2,7 @@
 package v1
 
 import (
+	"github.com/madyar997/practice_7/config"
 	"github.com/madyar997/practice_7/pkg/cache"
 	"net/http"
 
@@ -23,7 +24,7 @@ import (
 // @version     1.0
 // @host        localhost:8080
 // @BasePath    /v1
-func NewRouter(handler *gin.Engine, l logger.Interface, u usecase.UserUseCase, uc cache.User) {
+func NewRouter(handler *gin.Engine, l logger.Interface, u usecase.UserUseCase, uc cache.User, cfg *config.Config) {
 	// Options
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
@@ -41,6 +42,6 @@ func NewRouter(handler *gin.Engine, l logger.Interface, u usecase.UserUseCase, u
 	// Routers
 	h := handler.Group("/api/v1")
 	{
-		newUserRoutes(h, u, l, uc)
+		newUserRoutes(h, u, l, uc, cfg)
 	}
 }

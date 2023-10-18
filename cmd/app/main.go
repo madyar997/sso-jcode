@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// Configuration
-	cfg, err := config.NewConfig()
+	cfg, err := config.NewViperConfig()
 	if err != nil {
 		log.Fatalf("Config error: %s", err)
 	}
