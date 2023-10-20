@@ -8,12 +8,10 @@ import (
 )
 
 func main() {
-	// Configuration
 	cfg, err := config.NewViperConfig()
 	if err != nil {
 		log.Fatalf("Config error: %s", err)
 	}
 
-	// Run
 	app.Run(cfg)
 }

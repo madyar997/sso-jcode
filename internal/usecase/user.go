@@ -20,6 +20,10 @@ func NewUser(repo UserRepo) *User {
 	return &User{repo: repo}
 }
 
+func (u *User) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+	return u.repo.GetUserByEmail(ctx, email)
+}
+
 func (u *User) Users(ctx context.Context) ([]*entity.User, error) {
 	return u.repo.GetUsers(ctx)
 }
@@ -29,9 +33,6 @@ func (u *User) CreateUser(ctx context.Context, user *entity.User) (int, error) {
 }
 
 func (u *User) Register(ctx context.Context, email, password string) error {
-	//email password
-	//is email exists return with message "go to login"
-
 	generatedHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -49,11 +50,10 @@ func (u *User) Register(ctx context.Context, email, password string) error {
 }
 
 func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginResponse, error) {
-	//есть ли такой аккаунт с email =  email
 	user, err := u.repo.GetUserByEmail(ctx, email)
 	switch {
 	case err == nil:
-	case err == pgx.ErrNoRows:
+	case errors.Is(err, pgx.ErrNoRows):
 		return nil, errors.New("user is not exist")
 	default:
 		return nil, err
@@ -82,10 +82,4 @@ func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginRes
 		Email: user.Email,
 		Token: tokenString,
 	}, nil
-}
-
-func (u *User) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
-	time.Sleep(2 * time.Second)
-
-	return u.repo.GetUserByEmail(ctx, email)
 }

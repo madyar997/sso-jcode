@@ -3,15 +3,13 @@ package app
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/madyar997/practice_7/internal/entity"
 	"github.com/madyar997/practice_7/pkg/cache"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
-
-	"github.com/gin-gonic/gin"
 
 	"github.com/madyar997/practice_7/config"
 	v1 "github.com/madyar997/practice_7/internal/controller/http/v1"
@@ -33,7 +31,7 @@ func Run(cfg *config.Config) {
 	}
 	defer pg.Close()
 
-	err = pg.DB.AutoMigrate(entity.User{}, entity.Token{})
+	err = pg.DB.AutoMigrate(entity.User{})
 	if err != nil {
 		log.Fatalf("could not auto migrate: %s", err.Error())
 	}
@@ -43,7 +41,7 @@ func Run(cfg *config.Config) {
 		return
 	}
 
-	userCache := cache.NewUserCache(redisClient, 10*time.Minute)
+	userCache := cache.NewUserCache(redisClient, cache.UserCacheTimeout)
 
 	userUseCase := usecase.NewUser(repo.NewUserRepo(pg))
 

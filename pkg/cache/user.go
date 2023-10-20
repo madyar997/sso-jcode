@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const UserCacheTimeout = 10 * time.Minute
+
 type User interface {
 	Get(ctx context.Context, key string) (*entity.User, error)
 	Set(ctx context.Context, key string, value *entity.User) error

@@ -53,13 +53,12 @@ linters-settings:
     require-specific: true
 
 linters:
-  disable-all: true
+ # disable-all: true
   enable:
     - asciicheck
     - bodyclose
     - cyclop
     - deadcode
-    - depguard
     - dogsled
     - dupl
     - durationcheck
@@ -114,13 +113,14 @@ linters:
     - wsl
     - whitespace
 
-# disable:
-#    - exhaustivestruct
-#    - ifshort
-#    - goheader
-#    - prealloc
-#    - testpackage
-#    - wrapcheck
+  disable:
+     - exhaustivestruct
+     - ifshort
+     - goheader
+     - prealloc
+     - testpackage
+     - wrapcheck
+     - depguard
 
 issues:
   exclude-rules:

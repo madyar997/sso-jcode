@@ -1,8 +1,9 @@
 package entity
 
-import "github.com/golang-jwt/jwt"
+import (
+	"github.com/golang-jwt/jwt"
+)
 
-//todo isActive Role
 type User struct {
 	Id       int    `json:"id"`
 	Name     string `json:"name"`

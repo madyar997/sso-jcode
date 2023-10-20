@@ -36,7 +36,6 @@ func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Int
 		userHandler.POST("/register", r.Register)
 		userHandler.POST("/login", r.Login)
 	}
-
 }
 
 func (ur *userRoutes) GetUsers(ctx *gin.Context) {
@@ -57,12 +56,14 @@ func (ur *userRoutes) CreateUser(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, err)
+
 		return
 	}
 
 	insertedID, err := ur.u.CreateUser(ctx, user)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, err)
+
 		return
 	}
 
@@ -75,12 +76,14 @@ func (ur *userRoutes) Register(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&registerRequest)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, err)
+
 		return
 	}
 
 	err = ur.u.Register(ctx, registerRequest.Email, registerRequest.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, err)
+
 		return
 	}
 
@@ -93,12 +96,14 @@ func (ur *userRoutes) Login(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&loginRequest)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, err)
+
 		return
 	}
 
 	token, err := ur.u.Login(ctx, loginRequest.Email, loginRequest.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, err)
+
 		return
 	}
 
@@ -106,11 +111,11 @@ func (ur *userRoutes) Login(ctx *gin.Context) {
 }
 
 func (ur *userRoutes) GetUserByEmail(ctx *gin.Context) {
-
 	email := ctx.Query("email")
 
 	user, err := ur.userCache.Get(ctx, email)
 	if err != nil {
+
 		return
 	}
 
