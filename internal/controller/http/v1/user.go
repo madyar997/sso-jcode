@@ -1,7 +1,9 @@
 package v1
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/madyar997/practice_7/config"
 	"github.com/madyar997/practice_7/internal/controller/http/middleware"
 	"github.com/madyar997/practice_7/internal/controller/http/v1/dto"
@@ -11,6 +13,7 @@ import (
 	"github.com/madyar997/practice_7/pkg/logger"
 	"log"
 	"net/http"
+	"time"
 )
 
 type userRoutes struct {
@@ -25,7 +28,7 @@ func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Int
 
 	adminHandler := handler.Group("/admin/user")
 	{
-		adminHandler.Use(middleware.JwtVerify())
+		adminHandler.Use(middleware.JwtVerify(cfg))
 		adminHandler.GET("/all", r.GetUsers)
 		adminHandler.POST("/", r.CreateUser)
 		adminHandler.GET("/", r.GetUserByEmail)
@@ -35,6 +38,7 @@ func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Int
 	{
 		userHandler.POST("/register", r.Register)
 		userHandler.POST("/login", r.Login)
+		userHandler.POST("/refresh", middleware.JwtVerify(cfg), r.Refresh)
 	}
 }
 
@@ -107,6 +111,9 @@ func (ur *userRoutes) Login(ctx *gin.Context) {
 		return
 	}
 
+	ctx.SetCookie("access_token", token.AccessToken, 3600, "/", "localhost", false, true)
+	ctx.SetCookie("refresh_token", token.RefreshToken, 3600, "/", "localhost", false, true)
+
 	ctx.JSON(http.StatusOK, token)
 }
 
@@ -135,4 +142,63 @@ func (ur *userRoutes) GetUserByEmail(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, user)
+}
+
+func (ur *userRoutes) Refresh(ctx *gin.Context) {
+	userID, ok := ctx.Get("user_id")
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, fmt.Errorf("could not get user id from token"))
+
+		return
+	}
+
+	user, err := ur.u.GetUserByID(ctx, int(userID.(float64)))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, err)
+
+		return
+	}
+	//не изменились ли роли
+	if user == nil {
+		ctx.JSON(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	accessTokenClaims := jwt.MapClaims{
+		"user_id": user.Id,
+		"email":   user.Email,
+		"name":    user.Name,
+		"exp":     time.Now().Add(time.Second * usecase.AccessTokenTTL).Unix(),
+	}
+
+	accessToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), accessTokenClaims)
+
+	accessTokenString, err := accessToken.SignedString([]byte(ur.cfg.SecretKey))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	refreshTokenClaims := jwt.MapClaims{
+		"user_id": user.Id,
+		"exp":     time.Now().Add(time.Second * usecase.RefreshTokenTTL),
+	}
+
+	refreshToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), refreshTokenClaims)
+
+	refreshTokenString, err := refreshToken.SignedString([]byte(ur.cfg.SecretKey))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, err)
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.LoginResponse{
+		Name:         user.Name,
+		Email:        user.Email,
+		AccessToken:  accessTokenString,
+		RefreshToken: refreshTokenString,
+	})
 }

@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-
 	"github.com/spf13/viper"
 )
 
@@ -14,6 +13,7 @@ type (
 		Log  `yaml:"logger"`
 		PG   `yaml:"postgres"`
 		Auth `yaml:"auth"`
+		Jwt  `yaml:"jwt"`
 	}
 
 	// App -.
@@ -41,6 +41,12 @@ type (
 	Auth struct {
 		Login    string `mapstructure:"login"`
 		Password string `mapstructure:"pass"`
+	}
+
+	Jwt struct {
+		SecretKey       string `mapstructure:"secret_key"`
+		AccessTokenTTL  int64  `mapstructure:"access_token_ttl"`
+		RefreshTokenTTL int64  `mapstructure:"refresh_token_ttl"`
 	}
 )
 

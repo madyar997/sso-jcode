@@ -38,7 +38,7 @@ func (ur *UserRepo) GetUserByEmail(ctx context.Context, email string) (user *ent
 	return user, nil
 }
 
-func (ur *UserRepo) GetUserByID(ctx context.Context, id string) (user *entity.User, err error) {
+func (ur *UserRepo) GetUserByID(ctx context.Context, id int) (user *entity.User, err error) {
 	res := ur.DB.WithContext(ctx).Where("id = ?", id).Find(&user)
 	if res.Error != nil {
 		return nil, res.Error

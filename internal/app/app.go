@@ -43,7 +43,7 @@ func Run(cfg *config.Config) {
 
 	userCache := cache.NewUserCache(redisClient, cache.UserCacheTimeout)
 
-	userUseCase := usecase.NewUser(repo.NewUserRepo(pg))
+	userUseCase := usecase.NewUser(repo.NewUserRepo(pg), cfg)
 
 	// HTTP Server
 	handler := gin.New()
