@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"github.com/madyar997/practice_7/config"
-	"github.com/madyar997/practice_7/internal/controller/http/middleware"
-	"github.com/madyar997/practice_7/internal/controller/http/v1/dto"
-	"github.com/madyar997/practice_7/internal/entity"
-	"github.com/madyar997/practice_7/internal/usecase"
-	"github.com/madyar997/practice_7/pkg/cache"
-	"github.com/madyar997/practice_7/pkg/logger"
+	"github.com/madyar997/sso-jcode/config"
+	"github.com/madyar997/sso-jcode/internal/controller/http/v1/dto"
+	"github.com/madyar997/sso-jcode/internal/entity"
+	"github.com/madyar997/sso-jcode/internal/usecase"
+	"github.com/madyar997/sso-jcode/pkg/cache"
+	"github.com/madyar997/sso-jcode/pkg/jaeger"
+	"github.com/madyar997/sso-jcode/pkg/logger"
+	"github.com/opentracing/opentracing-go"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -28,7 +30,7 @@ func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Int
 
 	adminHandler := handler.Group("/admin/user")
 	{
-		adminHandler.Use(middleware.JwtVerify(cfg))
+		adminHandler.GET("/:id", r.GetUserByID)
 		adminHandler.GET("/all", r.GetUsers)
 		adminHandler.POST("/", r.CreateUser)
 		adminHandler.GET("/", r.GetUserByEmail)
@@ -38,7 +40,7 @@ func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Int
 	{
 		userHandler.POST("/register", r.Register)
 		userHandler.POST("/login", r.Login)
-		userHandler.POST("/refresh", middleware.JwtVerify(cfg), r.Refresh)
+		userHandler.POST("/refresh", r.Refresh)
 	}
 }
 
@@ -95,6 +97,9 @@ func (ur *userRoutes) Register(ctx *gin.Context) {
 }
 
 func (ur *userRoutes) Login(ctx *gin.Context) {
+	span, context := opentracing.StartSpanFromContext(ctx, "auth service, handler /login")
+	defer span.Finish()
+
 	var loginRequest dto.LoginRequest
 
 	err := ctx.ShouldBindJSON(&loginRequest)
@@ -104,7 +109,7 @@ func (ur *userRoutes) Login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := ur.u.Login(ctx, loginRequest.Email, loginRequest.Password)
+	token, err := ur.u.Login(context, loginRequest.Email, loginRequest.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, err)
 
@@ -201,4 +206,38 @@ func (ur *userRoutes) Refresh(ctx *gin.Context) {
 		AccessToken:  accessTokenString,
 		RefreshToken: refreshTokenString,
 	})
+}
+
+func (ur *userRoutes) GetUserByID(ctx *gin.Context) {
+	span := jaeger.StartSpanFromRequest(jaeger.Tracer, ctx.Request, "sso /getUserByID")
+	defer span.Finish()
+
+	idQueryParam := ctx.Param("id")
+
+	span.LogKV("id", idQueryParam)
+
+	id, err := strconv.Atoi(idQueryParam)
+	if err != nil {
+		ur.l.Error(err, "http - v1 - user - get by id ")
+		errorResponse(ctx, http.StatusBadRequest, "id is incorrect")
+
+		return
+	}
+
+	user, err := ur.u.GetUserByID(ctx, id)
+	if err != nil {
+		ur.l.Error(err, "http - v1 - user - all")
+		errorResponse(ctx, http.StatusInternalServerError, "database problems")
+
+		return
+	}
+
+	userDto := dto.UserInfo{
+		Id:    user.Id,
+		Name:  user.Name,
+		Email: user.Email,
+		Age:   user.Age,
+	}
+
+	ctx.JSON(http.StatusOK, userDto)
 }

@@ -2,8 +2,8 @@ package repo
 
 import (
 	"context"
-	"github.com/madyar997/practice_7/internal/entity"
-	"github.com/madyar997/practice_7/pkg/postgres"
+	"github.com/madyar997/sso-jcode/internal/entity"
+	"github.com/madyar997/sso-jcode/pkg/postgres"
 )
 
 type UserRepo struct {

@@ -4,25 +4,32 @@ package app
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/madyar997/practice_7/internal/entity"
-	"github.com/madyar997/practice_7/pkg/cache"
+	"github.com/madyar997/sso-jcode/internal/entity"
+	"github.com/madyar997/sso-jcode/pkg/cache"
+	"github.com/madyar997/sso-jcode/pkg/jaeger"
+	"github.com/opentracing/opentracing-go"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/madyar997/practice_7/config"
-	v1 "github.com/madyar997/practice_7/internal/controller/http/v1"
-	"github.com/madyar997/practice_7/internal/usecase"
-	"github.com/madyar997/practice_7/internal/usecase/repo"
-	"github.com/madyar997/practice_7/pkg/httpserver"
-	"github.com/madyar997/practice_7/pkg/logger"
-	"github.com/madyar997/practice_7/pkg/postgres"
+	"github.com/madyar997/sso-jcode/config"
+	v1 "github.com/madyar997/sso-jcode/internal/controller/http/v1"
+	"github.com/madyar997/sso-jcode/internal/usecase"
+	"github.com/madyar997/sso-jcode/internal/usecase/repo"
+	"github.com/madyar997/sso-jcode/pkg/httpserver"
+	"github.com/madyar997/sso-jcode/pkg/logger"
+	"github.com/madyar997/sso-jcode/pkg/postgres"
 )
 
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
+
+	//tracing
+	tracer, closer, _ := jaeger.InitJaeger()
+	defer closer.Close()
+	opentracing.SetGlobalTracer(tracer)
 
 	// Repository
 	pg, err := postgres.New(cfg.PG.URL)

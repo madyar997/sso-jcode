@@ -3,9 +3,8 @@ package usecase
 
 import (
 	"context"
-	"github.com/madyar997/practice_7/internal/controller/http/v1/dto"
-
-	"github.com/madyar997/practice_7/internal/entity"
+	"github.com/madyar997/sso-jcode/internal/controller/http/v1/dto"
+	"github.com/madyar997/sso-jcode/internal/entity"
 )
 
 type (

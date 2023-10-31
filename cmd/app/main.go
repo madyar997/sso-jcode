@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/madyar997/practice_7/config"
-	"github.com/madyar997/practice_7/internal/app"
+	"github.com/madyar997/sso-jcode/config"
+	"github.com/madyar997/sso-jcode/internal/app"
 )
 
 func main() {

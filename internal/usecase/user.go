@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt"
 	"github.com/jackc/pgx/v4"
-	"github.com/madyar997/practice_7/config"
-	"github.com/madyar997/practice_7/internal/controller/http/v1/dto"
-	"github.com/madyar997/practice_7/internal/entity"
+	"github.com/madyar997/sso-jcode/config"
+	"github.com/madyar997/sso-jcode/internal/controller/http/v1/dto"
+	"github.com/madyar997/sso-jcode/internal/entity"
+	"github.com/opentracing/opentracing-go"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -59,6 +60,9 @@ func (u *User) Register(ctx context.Context, email, password string) error {
 }
 
 func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginResponse, error) {
+	span := opentracing.SpanFromContext(ctx).Tracer().StartSpan("usecase: login")
+	defer span.Finish()
+
 	user, err := u.repo.GetUserByEmail(ctx, email)
 	switch {
 	case err == nil:

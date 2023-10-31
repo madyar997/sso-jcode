@@ -1,6 +1,6 @@
 linters-settings:
   gci:
-    local-prefixes: github.com/madyar997/practice_7
+    local-prefixes: github.com/madyar997/sso-jcode
   dupl:
     threshold: 100
   errorlint:

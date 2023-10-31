@@ -2,19 +2,19 @@
 package v1
 
 import (
-	"github.com/madyar997/practice_7/config"
-	"github.com/madyar997/practice_7/pkg/cache"
-	"net/http"
-
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
+	"github.com/madyar997/sso-jcode/config"
+	"github.com/madyar997/sso-jcode/pkg/cache"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"net/http"
 
 	// Swagger docs.
-	_ "github.com/madyar997/practice_7/docs"
-	"github.com/madyar997/practice_7/internal/usecase"
-	"github.com/madyar997/practice_7/pkg/logger"
+	_ "github.com/madyar997/sso-jcode/docs"
+	"github.com/madyar997/sso-jcode/internal/usecase"
+	"github.com/madyar997/sso-jcode/pkg/logger"
 )
 
 // NewRouter -.
@@ -28,6 +28,8 @@ func NewRouter(handler *gin.Engine, l logger.Interface, u usecase.UserUseCase, u
 	// Options
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
+
+	pprof.Register(handler)
 
 	// Swagger
 	swaggerHandler := ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER_HTTP_HANDLER")
