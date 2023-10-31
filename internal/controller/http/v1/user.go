@@ -97,8 +97,10 @@ func (ur *userRoutes) Register(ctx *gin.Context) {
 }
 
 func (ur *userRoutes) Login(ctx *gin.Context) {
-	span, context := opentracing.StartSpanFromContext(ctx, "auth service, handler /login")
+	span := opentracing.StartSpan("auth service, handler /login")
 	defer span.Finish()
+
+	context := opentracing.ContextWithSpan(ctx.Request.Context(), span)
 
 	var loginRequest dto.LoginRequest
 
@@ -209,7 +211,7 @@ func (ur *userRoutes) Refresh(ctx *gin.Context) {
 }
 
 func (ur *userRoutes) GetUserByID(ctx *gin.Context) {
-	span := jaeger.StartSpanFromRequest(jaeger.Tracer, ctx.Request, "sso /getUserByID")
+	span := jaeger.StartSpanFromRequest(jaeger.Tracer, ctx.Request, "sso /getUserByID handler method")
 	defer span.Finish()
 
 	idQueryParam := ctx.Param("id")
@@ -224,7 +226,9 @@ func (ur *userRoutes) GetUserByID(ctx *gin.Context) {
 		return
 	}
 
-	user, err := ur.u.GetUserByID(ctx, id)
+	context := opentracing.ContextWithSpan(ctx.Request.Context(), span)
+
+	user, err := ur.u.GetUserByID(context, id)
 	if err != nil {
 		ur.l.Error(err, "http - v1 - user - all")
 		errorResponse(ctx, http.StatusInternalServerError, "database problems")

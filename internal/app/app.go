@@ -7,6 +7,7 @@ import (
 	"github.com/madyar997/sso-jcode/internal/entity"
 	"github.com/madyar997/sso-jcode/pkg/cache"
 	"github.com/madyar997/sso-jcode/pkg/jaeger"
+	"github.com/madyar997/sso-jcode/pkg/logger"
 	"github.com/opentracing/opentracing-go"
 	"log"
 	"os"
@@ -18,13 +19,20 @@ import (
 	"github.com/madyar997/sso-jcode/internal/usecase"
 	"github.com/madyar997/sso-jcode/internal/usecase/repo"
 	"github.com/madyar997/sso-jcode/pkg/httpserver"
-	"github.com/madyar997/sso-jcode/pkg/logger"
 	"github.com/madyar997/sso-jcode/pkg/postgres"
 )
 
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
+	//logger, err := zap.NewDevelopment()
+	//if err != nil {
+	//	log.Fatalf("could not instantiate zap logger")
+	//}
+	//
+	//logger.Info("hello zap! ")
+	//logger.Warn("something warning ")
+	//logger.Error("something is error ")
 
 	//tracing
 	tracer, closer, _ := jaeger.InitJaeger()
@@ -34,7 +42,7 @@ func Run(cfg *config.Config) {
 	// Repository
 	pg, err := postgres.New(cfg.PG.URL)
 	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
+		l.Fatal("app - Run - postgres.New: %w")
 	}
 	defer pg.Close()
 

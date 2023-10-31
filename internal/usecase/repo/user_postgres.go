@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/madyar997/sso-jcode/internal/entity"
 	"github.com/madyar997/sso-jcode/pkg/postgres"
+	"github.com/opentracing/opentracing-go"
 )
 
 type UserRepo struct {
@@ -31,6 +32,9 @@ func (ur *UserRepo) CreateUser(ctx context.Context, user *entity.User) (int, err
 }
 
 func (ur *UserRepo) GetUserByEmail(ctx context.Context, email string) (user *entity.User, err error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "get user by email - repo")
+	defer span.Finish()
+
 	res := ur.DB.Where("email = ?", email).WithContext(ctx).Find(&user)
 	if res.Error != nil {
 		return nil, res.Error
@@ -39,6 +43,9 @@ func (ur *UserRepo) GetUserByEmail(ctx context.Context, email string) (user *ent
 }
 
 func (ur *UserRepo) GetUserByID(ctx context.Context, id int) (user *entity.User, err error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "get user by id - repo")
+	defer span.Finish()
+
 	res := ur.DB.WithContext(ctx).Where("id = ?", id).Find(&user)
 	if res.Error != nil {
 		return nil, res.Error

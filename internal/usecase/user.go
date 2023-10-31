@@ -27,7 +27,10 @@ func NewUser(repo UserRepo, cfg *config.Config) *User {
 }
 
 func (u *User) GetUserByID(ctx context.Context, id int) (*entity.User, error) {
-	return u.repo.GetUserByID(ctx, id)
+	span, spanCtx := opentracing.StartSpanFromContext(ctx, "get user by id - use case")
+	defer span.Finish()
+
+	return u.repo.GetUserByID(spanCtx, id)
 }
 
 func (u *User) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
@@ -60,10 +63,10 @@ func (u *User) Register(ctx context.Context, email, password string) error {
 }
 
 func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginResponse, error) {
-	span := opentracing.SpanFromContext(ctx).Tracer().StartSpan("usecase: login")
+	span, spanCtx := opentracing.StartSpanFromContext(ctx, "login - use case")
 	defer span.Finish()
 
-	user, err := u.repo.GetUserByEmail(ctx, email)
+	user, err := u.repo.GetUserByEmail(spanCtx, email)
 	switch {
 	case err == nil:
 	case errors.Is(err, pgx.ErrNoRows):
