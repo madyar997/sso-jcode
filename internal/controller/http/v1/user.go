@@ -12,7 +12,7 @@ import (
 	"github.com/madyar997/sso-jcode/pkg/jaeger"
 	"github.com/madyar997/sso-jcode/pkg/logger"
 	"github.com/opentracing/opentracing-go"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 	"time"
@@ -20,12 +20,12 @@ import (
 
 type userRoutes struct {
 	u         usecase.UserUseCase
-	l         logger.Interface
+	l         *logger.Logger
 	userCache cache.User
 	cfg       *config.Config
 }
 
-func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Interface, uc cache.User, cfg *config.Config) {
+func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l *logger.Logger, uc cache.User, cfg *config.Config) {
 	r := &userRoutes{u, l, uc, cfg}
 
 	adminHandler := handler.Group("/admin/user")
@@ -47,7 +47,7 @@ func newUserRoutes(handler *gin.RouterGroup, u usecase.UserUseCase, l logger.Int
 func (ur *userRoutes) GetUsers(ctx *gin.Context) {
 	users, err := ur.u.Users(ctx)
 	if err != nil {
-		ur.l.Error(err, "http - v1 - user - all")
+		ur.l.Logger.Error("error getting the user", zap.Error(err))
 		errorResponse(ctx, http.StatusInternalServerError, "database problems")
 
 		return
@@ -97,15 +97,18 @@ func (ur *userRoutes) Register(ctx *gin.Context) {
 }
 
 func (ur *userRoutes) Login(ctx *gin.Context) {
-	span := opentracing.StartSpan("auth service, handler /login")
+	span := opentracing.StartSpan("login handler")
 	defer span.Finish()
 
-	context := opentracing.ContextWithSpan(ctx.Request.Context(), span)
+	ur.l.Info("login request")
 
 	var loginRequest dto.LoginRequest
 
+	context := opentracing.ContextWithSpan(ctx.Request.Context(), span)
+
 	err := ctx.ShouldBindJSON(&loginRequest)
 	if err != nil {
+		ur.l.Error("error binding json ", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, err)
 
 		return
@@ -113,6 +116,7 @@ func (ur *userRoutes) Login(ctx *gin.Context) {
 
 	token, err := ur.u.Login(context, loginRequest.Email, loginRequest.Password)
 	if err != nil {
+		ur.l.Error("could not login ", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, err)
 
 		return
@@ -136,7 +140,7 @@ func (ur *userRoutes) GetUserByEmail(ctx *gin.Context) {
 	if user == nil {
 		user, err = ur.u.GetUserByEmail(ctx, email)
 		if err != nil {
-			ur.l.Error(err, "http - v1 - user - all")
+			ur.l.Error("http - v1 - user - all", zap.Error(err))
 			errorResponse(ctx, http.StatusInternalServerError, "database problems")
 
 			return
@@ -144,7 +148,7 @@ func (ur *userRoutes) GetUserByEmail(ctx *gin.Context) {
 
 		err = ur.userCache.Set(ctx, email, user)
 		if err != nil {
-			log.Printf("could not cache user with email %s: %v", email, err)
+			ur.l.Error("could not cache user with email ", zap.Error(err))
 		}
 	}
 
@@ -220,7 +224,7 @@ func (ur *userRoutes) GetUserByID(ctx *gin.Context) {
 
 	id, err := strconv.Atoi(idQueryParam)
 	if err != nil {
-		ur.l.Error(err, "http - v1 - user - get by id ")
+		ur.l.Error("http - v1 - user - get by id ", zap.Error(err))
 		errorResponse(ctx, http.StatusBadRequest, "id is incorrect")
 
 		return
@@ -230,7 +234,7 @@ func (ur *userRoutes) GetUserByID(ctx *gin.Context) {
 
 	user, err := ur.u.GetUserByID(context, id)
 	if err != nil {
-		ur.l.Error(err, "http - v1 - user - all")
+		ur.l.Error("http - v1 - user - all ", zap.Error(err))
 		errorResponse(ctx, http.StatusInternalServerError, "database problems")
 
 		return

@@ -2,13 +2,13 @@
 package app
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/madyar997/sso-jcode/internal/entity"
 	"github.com/madyar997/sso-jcode/pkg/cache"
 	"github.com/madyar997/sso-jcode/pkg/jaeger"
 	"github.com/madyar997/sso-jcode/pkg/logger"
 	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 	"log"
 	"os"
 	"os/signal"
@@ -24,15 +24,9 @@ import (
 
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
-	l := logger.New(cfg.Log.Level)
-	//logger, err := zap.NewDevelopment()
-	//if err != nil {
-	//	log.Fatalf("could not instantiate zap logger")
-	//}
-	//
-	//logger.Info("hello zap! ")
-	//logger.Warn("something warning ")
-	//logger.Error("something is error ")
+	//l := logger.New(cfg.Log.Level)
+
+	l := logger.New()
 
 	//tracing
 	tracer, closer, _ := jaeger.InitJaeger()
@@ -42,7 +36,7 @@ func Run(cfg *config.Config) {
 	// Repository
 	pg, err := postgres.New(cfg.PG.URL)
 	if err != nil {
-		l.Fatal("app - Run - postgres.New: %w")
+		l.Logger.Fatal("app - Run - postgres.New: %w", zap.Error(err))
 	}
 	defer pg.Close()
 
@@ -58,7 +52,7 @@ func Run(cfg *config.Config) {
 
 	userCache := cache.NewUserCache(redisClient, cache.UserCacheTimeout)
 
-	userUseCase := usecase.NewUser(repo.NewUserRepo(pg), cfg)
+	userUseCase := usecase.NewUser(repo.NewUserRepo(pg), cfg, l)
 
 	// HTTP Server
 	handler := gin.New()
@@ -71,14 +65,14 @@ func Run(cfg *config.Config) {
 
 	select {
 	case s := <-interrupt:
-		l.Info("app - Run - signal: " + s.String())
+		l.Logger.Fatal("app - Run - signal: " + s.String())
 	case err = <-httpServer.Notify():
-		l.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+		l.Logger.Fatal("app - Run - httpServer.Notify")
 	}
 
 	// Shutdown
 	err = httpServer.Shutdown()
 	if err != nil {
-		l.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+		l.Logger.Fatal("app - Run - httpServer.Shutdown: %w", zap.Error(err))
 	}
 }

@@ -9,7 +9,9 @@ import (
 	"github.com/madyar997/sso-jcode/config"
 	"github.com/madyar997/sso-jcode/internal/controller/http/v1/dto"
 	"github.com/madyar997/sso-jcode/internal/entity"
+	"github.com/madyar997/sso-jcode/pkg/logger"
 	"github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -18,12 +20,13 @@ const AccessTokenTTL = 900
 const RefreshTokenTTL = 1800
 
 type User struct {
-	cfg  *config.Config
-	repo UserRepo
+	cfg    *config.Config
+	repo   UserRepo
+	logger *logger.Logger
 }
 
-func NewUser(repo UserRepo, cfg *config.Config) *User {
-	return &User{repo: repo, cfg: cfg}
+func NewUser(repo UserRepo, cfg *config.Config, logger *logger.Logger) *User {
+	return &User{repo: repo, cfg: cfg, logger: logger}
 }
 
 func (u *User) GetUserByID(ctx context.Context, id int) (*entity.User, error) {
@@ -63,13 +66,14 @@ func (u *User) Register(ctx context.Context, email, password string) error {
 }
 
 func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginResponse, error) {
-	span, spanCtx := opentracing.StartSpanFromContext(ctx, "login - use case")
+	span, spanCtx := opentracing.StartSpanFromContext(ctx, "login use case")
 	defer span.Finish()
 
 	user, err := u.repo.GetUserByEmail(spanCtx, email)
 	switch {
 	case err == nil:
 	case errors.Is(err, pgx.ErrNoRows):
+		u.logger.Warn("user not found", zap.Error(err))
 		return nil, errors.New("user is not exist")
 	default:
 		return nil, err
@@ -77,9 +81,11 @@ func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginRes
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
+		u.logger.Error("passwords not match", zap.Error(err))
 		return nil, errors.New(fmt.Sprintf("passwords do not match %v", err))
 	}
 
+	u.logger.Info("generating access and refresh tokens ...")
 	accessTokenClaims := jwt.MapClaims{
 		"user_id":   user.Id,
 		"email":     user.Email,

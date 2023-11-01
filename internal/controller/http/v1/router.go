@@ -24,9 +24,8 @@ import (
 // @version     1.0
 // @host        localhost:8080
 // @BasePath    /v1
-func NewRouter(handler *gin.Engine, l logger.Interface, u usecase.UserUseCase, uc cache.User, cfg *config.Config) {
+func NewRouter(handler *gin.Engine, l *logger.Logger, u usecase.UserUseCase, uc cache.User, cfg *config.Config) {
 	// Options
-	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
 
 	pprof.Register(handler)

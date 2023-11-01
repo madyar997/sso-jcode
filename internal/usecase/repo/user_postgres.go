@@ -32,7 +32,7 @@ func (ur *UserRepo) CreateUser(ctx context.Context, user *entity.User) (int, err
 }
 
 func (ur *UserRepo) GetUserByEmail(ctx context.Context, email string) (user *entity.User, err error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "get user by email - repo")
+	span, _ := opentracing.StartSpanFromContext(ctx, "get user by email repo")
 	defer span.Finish()
 
 	res := ur.DB.Where("email = ?", email).WithContext(ctx).Find(&user)
