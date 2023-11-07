@@ -7,6 +7,14 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
+// UserRepo interface
+type IUserRepo interface {
+	GetUsers(ctx context.Context) ([]*entity.User, error)
+	GetUserByID(ctx context.Context, id int) (user *entity.User, err error)
+	CreateUser(ctx context.Context, user *entity.User) (int, error)
+	GetUserByEmail(ctx context.Context, email string) (*entity.User, error)
+}
+
 type UserRepo struct {
 	*postgres.Postgres
 }

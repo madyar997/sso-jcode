@@ -75,3 +75,7 @@ bin-deps:
 
 tidy:
 	go mod tidy && go mod vendor
+	
+mocks: 
+	mockery --dir=internal/usecase/repo --name=IUserRepo --filename=user_repository_mocks.go --output=internal/mocks/repomocks --outpkg=repomocks
+	

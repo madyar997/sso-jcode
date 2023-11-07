@@ -19,13 +19,4 @@ type (
 		Register(ctx context.Context, email, password string) error
 		Login(ctx context.Context, email, password string) (*dto.LoginResponse, error)
 	}
-
-	//UserRepo
-	UserRepo interface {
-		GetUsers(ctx context.Context) ([]*entity.User, error)
-		GetUserByID(ctx context.Context, id int) (user *entity.User, err error)
-		CreateUser(ctx context.Context, user *entity.User) (int, error)
-
-		GetUserByEmail(ctx context.Context, email string) (*entity.User, error)
-	}
 )

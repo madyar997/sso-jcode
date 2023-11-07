@@ -9,6 +9,7 @@ import (
 	"github.com/madyar997/sso-jcode/config"
 	"github.com/madyar997/sso-jcode/internal/controller/http/v1/dto"
 	"github.com/madyar997/sso-jcode/internal/entity"
+	"github.com/madyar997/sso-jcode/internal/usecase/repo"
 	"github.com/madyar997/sso-jcode/pkg/logger"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
@@ -21,11 +22,11 @@ const RefreshTokenTTL = 1800
 
 type User struct {
 	cfg    *config.Config
-	repo   UserRepo
+	repo   repo.IUserRepo
 	logger *logger.Logger
 }
 
-func NewUser(repo UserRepo, cfg *config.Config, logger *logger.Logger) *User {
+func NewUser(repo repo.IUserRepo, cfg *config.Config, logger *logger.Logger) *User {
 	return &User{repo: repo, cfg: cfg, logger: logger}
 }
 
