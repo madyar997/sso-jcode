@@ -3,6 +3,7 @@ package app
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/madyar997/sso-jcode/internal/controller/grpc"
 	"github.com/madyar997/sso-jcode/internal/entity"
 	"github.com/madyar997/sso-jcode/pkg/cache"
 	"github.com/madyar997/sso-jcode/pkg/jaeger"
@@ -62,6 +63,16 @@ func Run(cfg *config.Config) {
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+
+	grpcServer := grpc.NewGrpcServer(cfg.Grpc.Port, userUseCase, cfg)
+
+	log.Printf("starting grpc server on :%s", cfg.Grpc.Port)
+	err = grpcServer.Run()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	//http debug
 
 	select {
 	case s := <-interrupt:

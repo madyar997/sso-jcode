@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/jackc/pgx/v4 v4.14.1
+	github.com/madyar997/user-client v1.0.2
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.11.1
 	github.com/redis/go-redis/v9 v9.2.1
@@ -16,6 +17,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.13.0
+	google.golang.org/grpc v1.58.2
 	gorm.io/driver/postgres v1.0.8
 	gorm.io/gorm v1.21.4
 )
@@ -78,6 +80,7 @@ require (
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

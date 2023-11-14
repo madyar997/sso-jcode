@@ -21,3 +21,6 @@ jwt:
   secret_key: auth_secret
   access_token_ttl: 900
   refresh_token_ttl: 1800
+  
+grpc:
+  port: ':4000'
