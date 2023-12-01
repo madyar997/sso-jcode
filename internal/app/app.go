@@ -2,14 +2,16 @@
 package app
 
 import (
+	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/madyar997/sso-jcode/internal/controller/grpc"
-	"github.com/madyar997/sso-jcode/internal/entity"
+	"github.com/madyar997/sso-jcode/internal/database"
 	"github.com/madyar997/sso-jcode/pkg/cache"
 	"github.com/madyar997/sso-jcode/pkg/jaeger"
 	"github.com/madyar997/sso-jcode/pkg/logger"
 	"github.com/opentracing/opentracing-go"
-	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 	"log"
 	"os"
 	"os/signal"
@@ -18,14 +20,13 @@ import (
 	"github.com/madyar997/sso-jcode/config"
 	v1 "github.com/madyar997/sso-jcode/internal/controller/http/v1"
 	"github.com/madyar997/sso-jcode/internal/usecase"
-	"github.com/madyar997/sso-jcode/internal/usecase/repo"
 	"github.com/madyar997/sso-jcode/pkg/httpserver"
-	"github.com/madyar997/sso-jcode/pkg/postgres"
 )
 
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
-	//l := logger.New(cfg.Log.Level)
+	appCtx, appCtxCancel := context.WithCancel(context.Background())
+	defer appCtxCancel()
 
 	l := logger.New()
 
@@ -35,16 +36,16 @@ func Run(cfg *config.Config) {
 	opentracing.SetGlobalTracer(tracer)
 
 	// Repository
-	pg, err := postgres.New(cfg.PG.URL)
+	ds, err := database.Connect(map[string]string{
+		"datastore": cfg.PG.Name,
+		"url":       cfg.PG.URL,
+	})
 	if err != nil {
-		l.Logger.Fatal("app - Run - postgres.New: %w", zap.Error(err))
+		log.Printf("[ERROR] cannot connect to datastore: %v", err)
+		return
 	}
-	defer pg.Close()
-
-	err = pg.DB.AutoMigrate(entity.User{})
-	if err != nil {
-		log.Fatalf("could not auto migrate: %s", err.Error())
-	}
+	log.Printf("[INFO] connected to %s", ds.Name())
+	defer ds.Close()
 
 	redisClient, err := cache.NewRedisClient()
 	if err != nil {
@@ -52,38 +53,53 @@ func Run(cfg *config.Config) {
 	}
 
 	userCache := cache.NewUserCache(redisClient, cache.UserCacheTimeout)
+	userUseCase := usecase.NewUser(ds, cfg, l)
 
-	userUseCase := usecase.NewUser(repo.NewUserRepo(pg), cfg, l)
+	go signalHandler(appCtxCancel)
 
-	// HTTP Server
-	handler := gin.New()
-	v1.NewRouter(handler, l, userUseCase, userCache, cfg)
-	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
+	g, gCtx := errgroup.WithContext(appCtx)
 
-	// Waiting signal
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	g.Go(func() error {
+		handler := gin.New()
+		v1.NewRouter(handler, l, userUseCase, userCache, cfg)
+		httpServer := httpserver.New(gCtx, cfg, handler)
 
-	grpcServer := grpc.NewGrpcServer(cfg.Grpc.Port, userUseCase, cfg)
+		err = httpServer.Run()
+		if err != nil {
+			return fmt.Errorf("HTTP server: %v", err)
+		}
 
-	log.Printf("starting grpc server on :%s", cfg.Grpc.Port)
-	err = grpcServer.Run()
-	if err != nil {
-		log.Fatalf(err.Error())
+		httpServer.Wait()
+		return nil
+	})
+
+	g.Go(func() error {
+		grpcServer := grpc.NewGrpcServer(gCtx,
+			cfg.Grpc.Port,
+			userUseCase,
+			cfg)
+
+		err = grpcServer.Run()
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+
+		grpcServer.Wait()
+		return nil
+	})
+
+	// Ждем пока все горутины не будут завершены
+	if err = g.Wait(); err != nil {
+		log.Printf("[INFO] process terminated, %s", err)
+		return
 	}
+}
 
-	//http debug
-
-	select {
-	case s := <-interrupt:
-		l.Logger.Fatal("app - Run - signal: " + s.String())
-	case err = <-httpServer.Notify():
-		l.Logger.Fatal("app - Run - httpServer.Notify")
-	}
-
-	// Shutdown
-	err = httpServer.Shutdown()
-	if err != nil {
-		l.Logger.Fatal("app - Run - httpServer.Shutdown: %w", zap.Error(err))
-	}
+// signalHandler обработка сигнала SIGTERM с остановкой контекста
+func signalHandler(cancel context.CancelFunc) {
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	<-stop
+	log.Print("[WARN] interrupt signal")
+	cancel()
 }

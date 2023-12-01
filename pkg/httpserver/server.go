@@ -3,65 +3,70 @@ package httpserver
 
 import (
 	"context"
+	"github.com/madyar997/sso-jcode/config"
+	"github.com/madyar997/sso-jcode/internal/usecase"
+	"github.com/pkg/errors"
+	"log"
 	"net/http"
 	"time"
 )
 
 const (
-	_defaultReadTimeout     = 5 * time.Second
-	_defaultWriteTimeout    = 5 * time.Second
-	_defaultAddr            = ":80"
-	_defaultShutdownTimeout = 3 * time.Second
+	_defaultReadTimeout  = 5 * time.Second
+	_defaultWriteTimeout = 5 * time.Second
 )
 
 // Server -.
 type Server struct {
-	server          *http.Server
-	notify          chan error
-	shutdownTimeout time.Duration
+	Address         string
+	UserService     usecase.User
+	Handler         http.Handler
+	idleConnsClosed chan struct{}
+	masterCtx       context.Context
 }
 
 // New -.
-func New(handler http.Handler, opts ...Option) *Server {
-	httpServer := &http.Server{
-		Handler:      handler,
+func New(ctx context.Context, cfg *config.Config, handler http.Handler) *Server {
+	httpSrv := &Server{
+		Address:         cfg.HTTP.Port,
+		idleConnsClosed: make(chan struct{}),
+		masterCtx:       ctx,
+		Handler:         handler,
+	}
+
+	return httpSrv
+}
+
+func (s *Server) Run() error {
+
+	srv := &http.Server{
+		Addr:         s.Address,
+		Handler:      s.Handler,
 		ReadTimeout:  _defaultReadTimeout,
 		WriteTimeout: _defaultWriteTimeout,
-		Addr:         _defaultAddr,
 	}
 
-	s := &Server{
-		server:          httpServer,
-		notify:          make(chan error, 1),
-		shutdownTimeout: _defaultShutdownTimeout,
+	go s.GracefulShutdown(srv)
+	log.Printf("[INFO] serving HTTP on \"%s\"", s.Address)
+
+	if err := srv.ListenAndServe(); err != nil {
+		return errors.WithMessage(err, "error when starting the http server")
 	}
 
-	// Custom options
-	for _, opt := range opts {
-		opt(s)
+	return nil
+}
+
+func (srv *Server) GracefulShutdown(httpSrv *http.Server) {
+	<-srv.masterCtx.Done()
+
+	if err := httpSrv.Shutdown(context.Background()); err != nil {
+		log.Printf("[ERROR] HTTP server Shutdown: %v", err)
 	}
 
-	s.start()
-
-	return s
+	log.Println("[INFO] HTTP server has processed all idle connections")
+	close(srv.idleConnsClosed)
 }
 
-func (s *Server) start() {
-	go func() {
-		s.notify <- s.server.ListenAndServe()
-		close(s.notify)
-	}()
-}
-
-// Notify -.
-func (s *Server) Notify() <-chan error {
-	return s.notify
-}
-
-// Shutdown -.
-func (s *Server) Shutdown() error {
-	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
-	defer cancel()
-
-	return s.server.Shutdown(ctx)
+func (srv *Server) Wait() {
+	<-srv.idleConnsClosed
 }

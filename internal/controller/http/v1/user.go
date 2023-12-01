@@ -214,6 +214,18 @@ func (ur *userRoutes) Refresh(ctx *gin.Context) {
 	})
 }
 
+// GetUserByID godoc
+// @Summary get user by id
+// @Description returns user with specified id
+// @Tags users
+// @Accept json
+// @Product json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {object}  dto.UserInfo
+// @Failure      400  {object}  v1.response
+// @Failure      404  {object}  v1.response
+// @Failure      500  {object}  v1.response
+// @Router       /admin/user/{id} [get]
 func (ur *userRoutes) GetUserByID(ctx *gin.Context) {
 	span := jaeger.StartSpanFromRequest(jaeger.Tracer, ctx.Request, "sso /getUserByID handler method")
 	defer span.Finish()

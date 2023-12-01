@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/madyar997/sso-jcode/config"
 	"github.com/madyar997/sso-jcode/internal/controller/http/v1/dto"
+	"github.com/madyar997/sso-jcode/internal/database/drivers"
 	"github.com/madyar997/sso-jcode/internal/entity"
-	"github.com/madyar997/sso-jcode/internal/usecase/repo"
 	"github.com/madyar997/sso-jcode/pkg/logger"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
@@ -22,11 +22,11 @@ const RefreshTokenTTL = 1800
 
 type User struct {
 	cfg    *config.Config
-	repo   repo.IUserRepo
+	repo   drivers.DataStore
 	logger *logger.Logger
 }
 
-func NewUser(repo repo.IUserRepo, cfg *config.Config, logger *logger.Logger) *User {
+func NewUser(repo drivers.DataStore, cfg *config.Config, logger *logger.Logger) *User {
 	return &User{repo: repo, cfg: cfg, logger: logger}
 }
 
@@ -88,10 +88,10 @@ func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginRes
 
 	u.logger.Info("generating access and refresh tokens ...")
 	accessTokenClaims := jwt.MapClaims{
-		"user_id":   user.Id,
-		"email":     user.Email,
-		"name":      user.Name,
-		"ExpiresAt": time.Now().Add(time.Hour * 1).Unix(),
+		"user_id": user.Id,
+		"email":   user.Email,
+		"name":    user.Name,
+		"exp":     time.Now().Add(time.Hour * 1).Unix(),
 	}
 
 	accessToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), accessTokenClaims)
@@ -102,8 +102,8 @@ func (u *User) Login(ctx context.Context, email, password string) (*dto.LoginRes
 	}
 
 	refreshTokenClaims := jwt.MapClaims{
-		"user_id":   user.Id,
-		"ExpiresAt": time.Now().Add(time.Hour * 1),
+		"user_id": user.Id,
+		"exp":     time.Now().Add(time.Hour * 1),
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), refreshTokenClaims)

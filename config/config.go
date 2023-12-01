@@ -41,6 +41,7 @@ type (
 	PG struct {
 		PoolMax int    `env-required:"true" yaml:"pool_max" env:"PG_POOL_MAX"`
 		URL     string `env-required:"true" yaml:"url"      env:"PG_URL"`
+		Name    string `env-required:"true" yaml:"name"      env:"PG_NAME"`
 	}
 
 	Auth struct {

@@ -7,32 +7,35 @@ import (
 	"github.com/madyar997/sso-jcode/config"
 	"github.com/madyar997/sso-jcode/pkg/cache"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	_ "github.com/santosh/gingo/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 
 	// Swagger docs.
-	_ "github.com/madyar997/sso-jcode/docs"
 	"github.com/madyar997/sso-jcode/internal/usecase"
 	"github.com/madyar997/sso-jcode/pkg/logger"
 )
 
 // NewRouter -.
 // Swagger spec:
-// @title       Go Clean Template API
-// @description Using a translation service as an example
+// @title       SSO API
+// @description single sign on service for users
 // @version     1.0
 // @host        localhost:8080
-// @BasePath    /v1
+// @BasePath    /api/v1
 func NewRouter(handler *gin.Engine, l *logger.Logger, u usecase.UserUseCase, uc cache.User, cfg *config.Config) {
 	// Options
 	handler.Use(gin.Recovery())
 
 	pprof.Register(handler)
-
+	handler.Static("/assets", "./docs")
+	//handler.StaticFS("/files/*any", gin.Dir("sso-jcode", true))
 	// Swagger
-	swaggerHandler := ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER_HTTP_HANDLER")
-	handler.GET("/swagger/*any", swaggerHandler)
+	//handler.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
+	//	ginSwagger.URL("http://localhost:8080/docs/swagger.json"),
+	//	ginSwagger.DefaultModelsExpandDepth(-1)))
+	handler.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// K8s probe
 	handler.GET("/healthz", func(c *gin.Context) { c.Status(http.StatusOK) })
