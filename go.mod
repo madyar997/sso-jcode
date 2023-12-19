@@ -10,7 +10,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.1
-	github.com/redis/go-redis/v9 v9.2.1
+	github.com/redis/go-redis/v9 v9.3.1
 	github.com/santosh/gingo v0.0.0-20221207111602-0ef9ded9b180
 	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/files v0.0.0-20210815190702-a29dd2bc99b2
